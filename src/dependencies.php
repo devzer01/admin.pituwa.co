@@ -22,6 +22,12 @@ $container['view'] = function ($container) {
     return $view;
 };
 
+$container['pdo'] = function ($container) {
+    $settings = $container->get('settings')['database'];
+    $pdo = new PDO($settings['dsn'], $settings['username'], $settings['password']);
+    return $pdo;
+};
+
 // monolog
 $container['logger'] = function ($c) {
     $settings = $c->get('settings')['logger'];

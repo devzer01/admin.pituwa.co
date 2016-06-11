@@ -1,4 +1,4 @@
-{% extends "layout.twig.html" %}
+{% extends "layout.auth.twig.html" %}
 
 {% block title %} Dashboard {% endblock %}
 
@@ -13,8 +13,8 @@
 
     {% for link in links %}
         <tr>
-            <td>{{link.date}}</td>
-            <td><a href="{{link.link}}" target="_blank">{{link.link}}</a></td>
+            <td>{{link.added_datetime}}</td>
+            <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
             <td><a href="/claim/{{link.id}}">Claim</a></td>
         </tr>
     {% endfor %}

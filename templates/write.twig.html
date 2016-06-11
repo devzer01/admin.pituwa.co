@@ -1,0 +1,15 @@
+{% extends "layout.auth.twig.html" %}
+
+{% block title %} Dashboard {% endblock %}
+
+{% block content %}
+
+
+    <form class="form" method="POST" action="/write">
+        <h3>Link - {{ url }}</h3>
+        <textarea name="content" style="width: 80%; height: 300px;"></textarea>
+        <input type="hidden" name="id" value="{{id}}" /> <br/>
+        <button class="btn btn-sm btn-primary" type="submit">Submit</button>
+    </form>
+
+{% endblock %}

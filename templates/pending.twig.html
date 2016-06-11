@@ -1,7 +1,26 @@
-{% extends "layout.twig.html" %}
+{% extends "layout.auth.twig.html" %}
 
 {% block title %} Dashboard {% endblock %}
 
 {% block content %}
+
+
+<table class="table table-striped">
+    <tr>
+        <th>දින</th>
+        <th>Link</th>
+        <th>Claim</th>
+    </tr>
+
+    {% for link in links %}
+    <tr>
+        <td>{{link.assinged_datetime}}</td>
+        <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
+        <td><a href="/write/{{link.id}}">Write</a></td>
+    </tr>
+    {% endfor %}
+
+</table>
+
 
 {% endblock %}
