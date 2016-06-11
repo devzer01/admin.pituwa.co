@@ -1,0 +1,10 @@
+{% extends "layout.twig.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+<h1>User List</h1>
+<ul>
+    <li><a href="{{ path_for('profile', { 'name': 'josh' }) }}">Josh</a></li>
+</ul>
+{% endblock %}
