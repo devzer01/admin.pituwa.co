@@ -69,9 +69,15 @@ $app->get('/pending', function ($request, $response, $args) {
 })->add($authCheck);
 
 $app->get('/completed', function ($request, $response, $args) {
-    $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ORDER BY completed_datetime DESC");
     $userid = $_SESSION['user']['id'];
-    $stmt->execute([':userid' => $userid]);
+    $level_id = $_SESSION['user']['user_level_id'];
+    if ($level_id  == 1) {
+        $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ");
+        $stmt->execute([':userid' => $userid]);
+    } else {
+        $stmt = $this->pdo->prepare("SELECT * FROM link WHERE link_status_id = 2");
+        $stmt->execute([]);
+    }
     $links = $stmt->fetchAll();
     $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
     $args = array_merge(['links' => $links], $args);
