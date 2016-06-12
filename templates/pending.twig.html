@@ -7,14 +7,16 @@
 
 <table class="table table-striped">
     <tr>
-        <th>දින</th>
+        <th>Claimed Time</th>
+        <th>Expire Time</th>
         <th>Link</th>
-        <th>Claim</th>
+        <th>Submit</th>
     </tr>
 
     {% for link in links %}
     <tr>
         <td>{{link.assinged_datetime}}</td>
+        <td>{{link.expire_datetime}}</td>
         <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
         <td><a href="/write/{{link.id}}">Write</a></td>
     </tr>

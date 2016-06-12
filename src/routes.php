@@ -5,7 +5,6 @@ $authCheck = function ($request, $response, $next) {
     if (!isset($_SESSION['user'])) {
         return $response->withStatus(302)->withHeader('Location', '/');
     }
-
     return $next($request, $response);
 };
 
@@ -22,12 +21,31 @@ $app->post('/login', function ($request, $response, $args) {
         return $this->view->render($response, 'login.twig.html', ['error' => 'incorrect password']);
     } else {
         $_SESSION['user'] = $result;
+        if ($result['change_pass'] == 1) {
+            return $response->withStatus(302)->withHeader('Location', '/changepass');
+        }
         return $response->withStatus(302)->withHeader('Location', '/dashboard');
     }
 });
 
 $app->get('/dashboard', function ($request, $response, $args) {
     $args = ['activeDashboard' => 'active', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => ''];
+    $userid = $_SESSION['user']['id'];
+    $pdo = $this->pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link WHERE assinged_user_id IS NULL");
+    $stmt->execute();
+    $status['queue'] = $stmt->fetch()['cnt'];
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link WHERE assinged_user_id = :userid AND link_status_id = 1 ");
+    $stmt->execute([':userid' => $userid]);
+    $status['pending'] = $stmt->fetch()['cnt'];
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ");
+    $stmt->execute([':userid' => $userid]);
+    $status['completed'] = $stmt->fetch()['cnt'];
+
+    $args = array_merge($args, $status);
+
     return $this->view->render($response, 'dashboard.twig.html', $args);
 })->add($authCheck);
 
@@ -51,7 +69,7 @@ $app->get('/pending', function ($request, $response, $args) {
 })->add($authCheck);
 
 $app->get('/completed', function ($request, $response, $args) {
-    $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ");
+    $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ORDER BY completed_datetime DESC");
     $userid = $_SESSION['user']['id'];
     $stmt->execute([':userid' => $userid]);
     $links = $stmt->fetchAll();
@@ -112,10 +130,48 @@ $app->get('/read/{id}', function ($request, $response, $args) {
     return $this->view->render($response, 'read.twig.html', $args);
 })->setName('read')->add($authCheck);
 
+$app->get('/edit/{id}', function ($request, $response, $args) {
+    $stmt = $this->pdo->prepare("SELECT link.id, article.id AS article_id, article.content, link.url FROM article JOIN link ON link.id = article.link_id WHERE link_id = :id");
+    $id = $args['id'];
+    $stmt->execute([':id' => $id]);
+    $result = $stmt->fetch();
+    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
+    $args = array_merge($args, $result);
+    return $this->view->render($response, 'edit.twig.html', $args);
+})->setName('read')->add($authCheck);
+
+$app->post('/edit', function ($request, $response, $args) {
+
+    $parsedBody = $request->getParsedBody();
+    $userid = $_SESSION['user']['id'];
+
+    $stmt = $this->pdo->prepare("UPDATE article SET content = :content, updated_datetime = NOW() WHERE id = :id AND author_user_id = :userid");
+    $stmt->execute([':content' => $parsedBody['content'], ':id' => $parsedBody['article_id'], ':userid' => $userid]);
+
+    return $response->withStatus(302)->withHeader('Location', '/completed');
+
+});
 
 $app->get('/addlink', function ($request, $response, $args) {
     return $this->view->render($response, 'linkadd.twig.html', $args);
 })->setName('addlink')->add($authCheck);
+
+
+$app->get('/changepass', function ($request, $response, $args) {
+    return $this->view->render($response, 'changepass.twig.html', $args);
+})->setName('changepass')->add($authCheck);
+
+$app->post('/changepass', function ($request, $response, $args) {
+    $pdo = $this->pdo;
+    $parsedBody = $request->getParsedBody();
+    $userid = $_SESSION['user']['id'];
+    $stmt = $pdo->prepare("UPDATE user SET pass = PASSWORD(:pass), change_pass = 0 WHERE id = :id");
+    $stmt->execute([":pass" => $parsedBody['pass'], ":id" => $userid]);
+
+    return $response->withStatus(302)->withHeader('Location', '/dashboard');
+
+})->setName('changepasspost')->add($authCheck);
+
 
 $app->post('/addlink', function ($request, $response, $args) {
     $parsedBody = $request->getParsedBody();

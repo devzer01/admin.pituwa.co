@@ -4,4 +4,21 @@
 
 {% block content %}
 
+<table class="table">
+
+    <tr>
+        <th><a href="/queue">Un assinged</a></th>
+        <td>{{ queue }}</td>
+    </tr>
+    <tr>
+        <th><a href="/pending">Pending</a></th>
+        <td>{{ pending }}</td>
+    </tr>
+    <tr>
+        <th><a href="/completed">Completed</a></th>
+        <td>{{ completed }}</td>
+    </tr>
+
+</table>
+
 {% endblock %}

@@ -15,7 +15,11 @@
     <tr>
         <td>{{link.completed_datetime}}</td>
         <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
-        <td><a href="/read/{{link.id}}">Read</a></td>
+        <td>
+            <a href="/read/{{link.id}}">Read</a>
+            &nbsp;&nbsp;
+            <a href="/edit/{{link.id}}">Edit</a>
+        </td>
     </tr>
     {% endfor %}
 
