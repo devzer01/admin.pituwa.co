@@ -72,10 +72,10 @@ $app->get('/completed', function ($request, $response, $args) {
     $userid = $_SESSION['user']['id'];
     $level_id = $_SESSION['user']['user_level_id'];
     if ($level_id  == 1) {
-        $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id = :userid AND link_status_id = 2 ");
+        $stmt = $this->pdo->prepare("SELECT link.*, article.article_status_id FROM link JOIN article ON article.link_id = link.id WHERE assinged_user_id = :userid AND link_status_id = 2 ");
         $stmt->execute([':userid' => $userid]);
     } else {
-        $stmt = $this->pdo->prepare("SELECT * FROM link WHERE link_status_id = 2");
+        $stmt = $this->pdo->prepare("SELECT link.* FROM link JOIN article ON article.link_id = link.id WHERE link_status_id = 2 AND article.article_status_id != 1");
         $stmt->execute([]);
     }
     $links = $stmt->fetchAll();
