@@ -29,7 +29,7 @@ $app->post('/login', function ($request, $response, $args) {
 });
 
 $app->get('/dashboard', function ($request, $response, $args) {
-    $args = ['activeDashboard' => 'active', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => ''];
+    $args = ['activeDashboard' => 'active'];
     $userid = $_SESSION['user']['id'];
     $pdo = $this->pdo;
     $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link WHERE assinged_user_id IS NULL");
@@ -53,7 +53,7 @@ $app->get('/queue', function ($request, $response, $args) {
     $stmt = $this->pdo->prepare("SELECT * FROM link WHERE assinged_user_id IS NULL");
     $stmt->execute();
     $links = $stmt->fetchAll();
-    $args = ['activeDashboard' => '', 'activeQueue' => 'active', 'activePending' => '', 'activeCompleted' => ''];
+    $args = ['activeQueue' => 'active'];
     $args = array_merge(['links' => $links], $args);
     return $this->view->render($response, 'queue.twig.html', $args);
 })->add($authCheck);
@@ -63,7 +63,7 @@ $app->get('/pending', function ($request, $response, $args) {
     $userid = $_SESSION['user']['id'];
     $stmt->execute([':userid' => $userid]);
     $links = $stmt->fetchAll();
-    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => 'active', 'activeCompleted' => ''];
+    $args = [ 'activePending' => 'active'];
     $args = array_merge(['links' => $links], $args);
     return $this->view->render($response, 'pending.twig.html', $args);
 })->add($authCheck);
@@ -79,7 +79,7 @@ $app->get('/completed', function ($request, $response, $args) {
         $stmt->execute([]);
     }
     $links = $stmt->fetchAll();
-    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
+    $args = ['activeCompleted' => 'active'];
     $args = array_merge(['links' => $links], $args);
     return $this->view->render($response, 'completed.twig.html', $args);
 })->add($authCheck);
@@ -106,7 +106,7 @@ $app->get('/write/{id}', function ($request, $response, $args) {
     $id = $args['id'];
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch();
-    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
+    $args = ['activeCompleted' => 'active'];
     $args = array_merge($args, $result);
     return $this->view->render($response, 'write.twig.html', $args);
 })->setName('write')->add($authCheck);
@@ -131,7 +131,7 @@ $app->get('/read/{id}', function ($request, $response, $args) {
     $id = $args['id'];
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch();
-    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
+    $args = ['activeCompleted' => 'active'];
     $args = array_merge($args, $result);
     return $this->view->render($response, 'read.twig.html', $args);
 })->setName('read')->add($authCheck);
@@ -141,7 +141,7 @@ $app->get('/edit/{id}', function ($request, $response, $args) {
     $id = $args['id'];
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch();
-    $args = ['activeDashboard' => '', 'activeQueue' => '', 'activePending' => '', 'activeCompleted' => 'active'];
+    $args = ['activeCompleted' => 'active'];
     $args = array_merge($args, $result);
     return $this->view->render($response, 'edit.twig.html', $args);
 })->setName('read')->add($authCheck);
@@ -157,11 +157,6 @@ $app->post('/edit', function ($request, $response, $args) {
     return $response->withStatus(302)->withHeader('Location', '/completed');
 
 });
-
-$app->get('/addlink', function ($request, $response, $args) {
-    return $this->view->render($response, 'linkadd.twig.html', $args);
-})->setName('addlink')->add($authCheck);
-
 
 $app->get('/changepass', function ($request, $response, $args) {
     return $this->view->render($response, 'changepass.twig.html', $args);
@@ -179,11 +174,30 @@ $app->post('/changepass', function ($request, $response, $args) {
 })->setName('changepasspost')->add($authCheck);
 
 
+$app->get('/addlink', function ($request, $response, $args) {
+    $args['activeAddLink'] = 'active';
+    return $this->view->render($response, 'linkadd.twig.html', $args);
+})->setName('addlink')->add($authCheck);
+
 $app->post('/addlink', function ($request, $response, $args) {
     $parsedBody = $request->getParsedBody();
     $userid = $_SESSION['user']['id'];
-    $stmt = $this->pdo->prepare("INSERT INTO link(url, added_user_id, added_datetime, link_status_id) 
-        VALUES (:url, :userid, NOW(), 0)");
-    $stmt->execute([':url' => $parsedBody['url'], ':userid' => $userid]);
-    return $response->withStatus(302)->withHeader('Location', '/addlink');
+    $userLevelid = $_SESSION['user']['user_level_id'];
+    $pdo = $this->pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link WHERE url = :url");
+    $stmt->execute([':url' => $parsedBody['url']]);
+    $result = $stmt->fetch();
+    $linkStatusId = 0;
+    if ($userLevelid != 0) {
+        $linkStatusId = 5; //link check for admin
+    }
+    if ($result['cnt'] == 0) {
+        $stmt = $pdo->prepare("INSERT INTO link(url, added_user_id, added_datetime, link_status_id, summary) VALUES (:url, :userid, NOW(), :linkStatusId, :summary)");
+        $stmt->execute([':url' => $parsedBody['url'], ':userid' => $userid, ':linkStatusId' => $linkStatusId, ':summary' => $parsedBody['summary']]);
+        return $response->withStatus(302)->withHeader('Location', '/addlink');
+    }
+    $args['error'] = "Link Exists";
+    $args['activeAddLink'] = 'active';
+    return $this->view->render($response, 'linkadd.twig.html', $args);
+
 })->setName('addlink')->add($authCheck);
