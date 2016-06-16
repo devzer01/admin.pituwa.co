@@ -10,6 +10,7 @@
         <th>Claimed Time</th>
         <th>Expire Time</th>
         <th>Link</th>
+        <th>Summary</th>
         <th>Submit</th>
     </tr>
 
@@ -17,7 +18,8 @@
     <tr>
         <td>{{link.assinged_datetime}}</td>
         <td>{{link.expire_datetime}}</td>
-        <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
+        <td><a href="{{link.url}}" target="_blank">{{link.url|truncate(100)}}</a></td>
+        <td>{{link.summary|nl2br}}</td>
         <td><a href="/write/{{link.id}}">Write</a></td>
     </tr>
     {% endfor %}
