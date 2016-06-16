@@ -8,13 +8,15 @@
     <tr>
         <th>Added Time</th>
         <th>Link</th>
+        <th>Summary</th>
         <th>Claim</th>
     </tr>
 
     {% for link in links %}
         <tr>
-            <td>{{link.added_datetime}}</td>
-            <td><a href="{{link.url}}" target="_blank">{{link.url}}</a></td>
+            <td style="white-space: nowrap;">{{link.added_datetime}}</td>
+            <td><a href="{{link.url}}" target="_blank">{{link.url|truncate(100)}}</a></td>
+            <td>{{link.summary|nl2br}}</td>
             <td><a href="/claim/{{link.id}}">Claim</a></td>
         </tr>
     {% endfor %}

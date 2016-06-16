@@ -4,10 +4,20 @@
 
 {% block content %}
 
+{% if error is not empty %}
+    <div class="alert alert-danger" role="alert">{{ error }}</div>
+{% endif %}
 
-    <form class="form" method="POST" action="/addlink">
-        <input type="text" size="250" name="url" /> <br/>
-        <button class="btn btn-sm btn-primary" type="submit">Submit</button>
-    </form>
+<form method="POST" action="/addlink">
+    <div class="form-group">
+        <label for="inputURL">URL</label>
+        <input type="name" name="url" class="form-control" id="inputURL" placeholder="URL">
+    </div>
+    <div class="form-group">
+        <label for="inputSummary">Summary</label>
+        <textarea class="form-control" rows="3" name="summary" id="inputSummary"></textarea>
+    </div>
+    <button class="btn btn-sm btn-primary" type="submit">Submit</button>
+</form>
 
 {% endblock %}
