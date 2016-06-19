@@ -44,6 +44,16 @@ $app->get('/dashboard', function ($request, $response, $args) {
     $stmt->execute([':userid' => $userid]);
     $status['completed'] = $stmt->fetch()['cnt'];
 
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link JOIN article ON article.link_id = link.id WHERE assinged_user_id = :userid AND link_status_id = 2 AND article.article_status_id = 1 ");
+    $stmt->execute([':userid' => $userid]);
+    $status['published'] = $stmt->fetch()['cnt'];
+    $status['payment_pending'] = $status['published'] * $_SESSION['user']['article_payment'];
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM link JOIN article ON article.link_id = link.id WHERE assinged_user_id = :userid AND link_status_id = 2 AND article.article_status_id = 2 ");
+    $stmt->execute([':userid' => $userid]);
+    $status['payed'] = $stmt->fetch()['cnt'];
+    $status['payed_amount'] = $status['payed'] * $_SESSION['user']['article_payment'];
+
     $args = array_merge($args, $status);
 
     return $this->view->render($response, 'dashboard.twig.html', $args);
@@ -75,7 +85,7 @@ $app->get('/completed', function ($request, $response, $args) {
         $stmt = $this->pdo->prepare("SELECT link.*, article.article_status_id FROM link JOIN article ON article.link_id = link.id WHERE assinged_user_id = :userid AND link_status_id = 2 ");
         $stmt->execute([':userid' => $userid]);
     } else {
-        $stmt = $this->pdo->prepare("SELECT link.* FROM link JOIN article ON article.link_id = link.id WHERE link_status_id = 2 AND article.article_status_id != 1");
+        $stmt = $this->pdo->prepare("SELECT link.* FROM link JOIN article ON article.link_id = link.id WHERE link_status_id = 2 AND article.article_status_id = 0");
         $stmt->execute([]);
     }
     $links = $stmt->fetchAll();
@@ -127,12 +137,17 @@ $app->post('/write', function ($request, $response, $args) {
 })->setName('write_post')->add($authCheck);
 
 $app->get('/read/{id}', function ($request, $response, $args) {
-    $stmt = $this->pdo->prepare("SELECT * FROM article JOIN link ON link.id = article.link_id WHERE link_id = :id");
+    $stmt = $this->pdo->prepare("SELECT article.* FROM article JOIN link ON link.id = article.link_id WHERE link_id = :id");
     $id = $args['id'];
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch();
     $args = ['activeCompleted' => 'active'];
     $args = array_merge($args, $result);
+
+    $pdo = $this->pdo;
+    $stmt = $pdo->prepare("SELECT article_comment.*, user.email FROM article_comment JOIN user ON user.id = article_comment.user_id WHERE article_id = :id ");
+    $stmt->execute([':id' => $result['id']]);
+    $args['comments'] = $stmt->fetchAll();
     return $this->view->render($response, 'read.twig.html', $args);
 })->setName('read')->add($authCheck);
 
@@ -178,6 +193,17 @@ $app->get('/addlink', function ($request, $response, $args) {
     $args['activeAddLink'] = 'active';
     return $this->view->render($response, 'linkadd.twig.html', $args);
 })->setName('addlink')->add($authCheck);
+
+$app->post('/addcomment', function ($request, $response, $args) {
+    $parsedBody = $request->getParsedBody();
+    $userid = $_SESSION['user']['id'];
+
+    $pdo = $this->pdo;
+    $stmt = $pdo->prepare("INSERT INTO article_comment (article_id, created_datetime, user_id, comment) VALUES (:article_id, NOW(), :user_id, :comment)");
+    $stmt->execute([':article_id' => $parsedBody['article_id'], ':user_id' => $userid, ':comment' => $parsedBody['summary']]);
+    return $response->withStatus(302)->withHeader('Location', '/read/' . $parsedBody['link_id']);
+
+})->setName('addcomment')->add($authCheck);
 
 $app->post('/addlink', function ($request, $response, $args) {
     $parsedBody = $request->getParsedBody();

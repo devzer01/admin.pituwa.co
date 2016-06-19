@@ -19,6 +19,26 @@
         <td>{{ completed }}</td>
     </tr>
 
+    <tr>
+        <th><a href="/completed">Published (Payment Pending)</a></th>
+        <td>{{ published }}</td>
+    </tr>
+
+    <tr>
+        <th><a href="/completed">Payment Pending</a></th>
+        <td>SLR {{ payment_pending|number_format }}</td>
+    </tr>
+
+    <tr>
+        <th><a href="/completed">Payed</a></th>
+        <td>{{ payed }}</td>
+    </tr>
+
+    <tr>
+        <th><a href="/completed">Payed Amount</a></th>
+        <td>SLR {{ payed_amount|number_format }}</td>
+    </tr>
+
 </table>
 
 {% endblock %}

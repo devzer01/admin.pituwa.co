@@ -5,4 +5,32 @@
 {% block content %}
         <h3>Link - {{ url }}</h3>
         <div>{{ content|nl2br }}</div>
+
+<h3>Feedback on Article</h3>
+<table class="table table-striped">
+        <tr>
+                <th>දින</th>
+                <th>User</th>
+                <th>Comment</th>
+        </tr>
+
+        {% for comment in comments %}
+        <tr>
+                <td>{{comment.created_datetime}}</td>
+                <td>{{comment.email}}</td>
+                <td>{{comment.comment|nl2br}}</td>
+        </tr>
+        {% endfor %}
+</table>
+
+<form method="POST" action="/addcomment">
+        <div class="form-group">
+                <label for="inputSummary">Feedback</label>
+                <textarea class="form-control" rows="3" name="summary" id="inputSummary"></textarea>
+        </div>
+        <input type="hidden" name="article_id" value="{{id}}" />
+        <input type="hidden" name="link_id" value="{{link_id}}" />
+        <button class="btn btn-sm btn-primary" type="submit">Submit</button>
+</form>
+
 {% endblock %}
