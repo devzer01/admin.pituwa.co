@@ -137,7 +137,7 @@ $app->post('/write', function ($request, $response, $args) {
 })->setName('write_post')->add($authCheck);
 
 $app->get('/read/{id}', function ($request, $response, $args) {
-    $stmt = $this->pdo->prepare("SELECT article.* FROM article JOIN link ON link.id = article.link_id WHERE link_id = :id");
+    $stmt = $this->pdo->prepare("SELECT article.*, link.url FROM article JOIN link ON link.id = article.link_id WHERE link_id = :id");
     $id = $args['id'];
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch();
